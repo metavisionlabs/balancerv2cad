@@ -1,7 +1,10 @@
 from decimal import *
+from math import log
 from typing import List
-from BalancerV2cad.StableMath import StableMath
-from BalancerV2cad.BalancerConstants import *
+from src.BalancerV2cad.StableMath import StableMath
+from src.BalancerV2cad.BalancerConstants import *
+from src.BalancerV2cad.logger.pkg_logger import PackageLogger
+
 
 
 class StablePool(StableMath):
@@ -11,6 +14,7 @@ class StablePool(StableMath):
         self._pool_token_supply = initial_pool_supply
         self.factory_fees = Decimal('0')
         self._balances = {}
+        self.logger = PackageLogger().get_logger()
 
     def swap(self, token_in: str, token_out: str, amount: Decimal, given_in: bool = True):
         if(isinstance(amount,int) or isinstance(amount,float)):
@@ -24,7 +28,7 @@ class StablePool(StableMath):
 
         if(given_in): amount_out = StableMath.calcOutGivenIn(AMPLIFICATION_PARAMETER, balances, 0, 1, swap_amount)
         else: amount_out = StableMath.calcInGivenOut(AMPLIFICATION_PARAMETER, balances, 0, 1, swap_amount)
-
+        self.logger.debug("Amount Out %s", amount_out)
         self._balances[token_out] -= amount_out
         self._balances[token_in] += swap_amount
         return amount_out

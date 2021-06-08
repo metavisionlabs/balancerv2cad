@@ -1,5 +1,5 @@
 from typing import List
-from BalancerV2cad.StableMath import StableMath
+from src.BalancerV2cad.StableMath import StableMath
 from decimal import *
 import unittest
 
@@ -40,6 +40,7 @@ class TestStableMath(unittest.TestCase):
         amp = Decimal(100)
         balances = [Decimal(10),Decimal(12)]
         result =  StableMath.calculateInvariant(amp, balances)
+        print('RESULTING VINARIANT', result)
         assert expectEqualWithError(result, Decimal(22))
         '''
         Tests invariant for three tokens
@@ -220,3 +221,13 @@ class TestStableMath(unittest.TestCase):
 
         result = StableMath.getTokenBalanceGivenInvariantAndAllOtherBalances(amp, balances, invariant, tokenIndex)
         assert expectEqualWithError(result, Decimal(0.00071756564425404818025))
+
+    def test_getTokenBalanceGivenInvariantAndAllOtherBalances2(stablemath_test):
+        amp = Decimal(200)
+        balances = [Decimal(1), Decimal(1.001)]
+        invariant = Decimal(1.9)
+        expected = Decimal(0.899013656)
+        tokenIndex = 0
+        result = StableMath.getTokenBalanceGivenInvariantAndAllOtherBalances(amp, balances, invariant, tokenIndex )
+        assert expectEqualWithError(result, expected)
+        

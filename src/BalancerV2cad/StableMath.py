@@ -2,7 +2,7 @@ from decimal import *
 from typing import List, Dict, AnyStr
 from attr import dataclass
 from math import ceil, floor
-from BalancerV2cad.util import *
+from src.BalancerV2cad.util import *
 
 getcontext().prec = 28
 @dataclass
@@ -38,15 +38,16 @@ class StableMath:
         for i in range(255):
             P_D = num_tokens*balances[0]
             for j in range(1, num_tokens):
-                P_D = ceil(((P_D*balances[j])*num_tokens)/invariant)
+                P_D = (P_D*balances[j]*num_tokens)/invariant
             prevInvariant = invariant
 
-            invariant = ceil(((num_tokens*invariant)*invariant + (ampTimesTotal*bal_sum)*P_D) / ((num_tokens + 1)*invariant + (ampTimesTotal - 1)*P_D))
+            invariant = ceil((num_tokens*invariant*invariant+(ampTimesTotal*bal_sum*P_D))/(((num_tokens+1)*invariant) + (ampTimesTotal-1)*P_D))
             if(invariant > prevInvariant):
                 if(invariant - prevInvariant <= 1):
                     break
             elif(prevInvariant - invariant <= 1):
                 break
+        print("FINAL INVARIANT", invariant )
         return Decimal(invariant)
 
 
@@ -216,7 +217,10 @@ class StableMath:
         # // P = product of final balances but y                                                                       //
         # **************************************************************************************************************/
         print("Context", "OUTGIVENIN" )
+        print('AmplificationParameter', amplificationParameter)
+        print('out-given-inbalances',balances)
         invariant = StableMath.calculateInvariant(amplificationParameter, balances)
+
         print("Invariant", invariant)
         balances[tokenIndexIn] = balances[tokenIndexIn] + tokenAmountIn
         finalBalanceOut = StableMath.getTokenBalanceGivenInvariantAndAllOtherBalances(amplificationParameter, balances, invariant, tokenIndexOut)
@@ -225,15 +229,12 @@ class StableMath:
 
         balances[tokenIndexIn] = balances[tokenIndexIn] - tokenAmountIn
 
-        result = balances [tokenIndexOut] - finalBalanceOut  # TODO took out .sub(1) at the end of this statement
+        result = balances [tokenIndexOut] - finalBalanceOut # TODO took out .sub(1) at the end of this statement
 
         print(result)
         print("END-CONTEXT", "OUTGIVENIN" )
 
         return result
-        # Flow of calculations:
-        #  amountBPTOut -> newInvariant -> (amountInProportional, amountInAfterFee) ->
-        #  amountInPercentageExcess -> amountIn
 
     @staticmethod
 
@@ -324,6 +325,9 @@ class StableMath:
 
     def getTokenBalanceGivenInvariantAndAllOtherBalances(amplificationParameter: Decimal, balances: List[Decimal], invariant: Decimal, tokenIndex: int) -> Decimal:
         getcontext().prec = 28
+        print("amplificationParameter", amplificationParameter)
+        print("get-tOKEN-BALANCE-GIVENbalances", balances)
+        print("invariant", invariant)
         ampTimesTotal = amplificationParameter * len(balances)
         bal_sum = Decimal(sum(balances))
         P_D = len(balances) * balances[0]
@@ -332,15 +336,15 @@ class StableMath:
 
         bal_sum -= balances[tokenIndex]
 
-        c = invariant*invariant/ampTimesTotal
-        c = divUp(mulUp(c, balances[tokenIndex]), P_D)
+        c = invariant*invariant/(ampTimesTotal*P_D)
+        c = c * balances[tokenIndex]
         print(type(bal_sum),type(invariant),type(ampTimesTotal))
         b = bal_sum + divDown(invariant, ampTimesTotal)
         prevTokenbalance = 0
         tokenBalance = divUp((invariant*invariant+c), (invariant+b))
         for i in range(255):
             prevTokenbalance = tokenBalance
-            tokenBalance = divUp((mulUp(tokenBalance,tokenBalance) + c),((tokenBalance*Decimal(2))+b-invariant))
+            tokenBalance = (tokenBalance*tokenBalance + c)/(tokenBalance*2 + b - invariant)
             print(i,tokenBalance)
             if(tokenBalance > prevTokenbalance):
                 if(tokenBalance-prevTokenbalance <= 1/1e18):
