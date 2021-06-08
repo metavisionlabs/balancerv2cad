@@ -20,6 +20,7 @@ import pytest
 
 # BalancerV2cad package
 import BalancerV2cad
+from BalancerV2cad.WeightedPool import WeightedPool
 
 # noinspection PyCallByClass
 
@@ -36,3 +37,4 @@ def version_test() -> None:
 
     # tear down code
     sys.stdout.write('Running Teardown code for BalancerV2cad module\n')
+

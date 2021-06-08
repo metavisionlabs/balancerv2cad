@@ -1,6 +1,6 @@
 from decimal import Decimal
-from model.pools.weighted.WeightedMath import WeightedMath
-from model.pools.BalancerConstants import *
+from BalancerV2cad.WeightedMath import WeightedMath
+from BalancerV2cad.BalancerConstants import *
 
 
 class WeightedPool(WeightedMath):
@@ -15,6 +15,8 @@ class WeightedPool(WeightedMath):
 
 
     def swap(self, token_in: str, token_out: str, amount: Decimal, given_in: bool = True):
+        if(token_in not in self._balances or token_out not in self._balances):
+            raise Exception("TOKENS NOT IN POOL")
         if(isinstance(amount,int) or isinstance(amount,float)):
             amount = Decimal(amount)
         elif(not isinstance(amount, Decimal)):
@@ -51,10 +53,14 @@ class WeightedPool(WeightedMath):
             raise Exception("over 8 tokens")
     
     def exit_pool(self, balances: dict):
-        bals = self._balances - balances
-        for key in bals:
-            if(bals[key]<0): bals[key] = 0
-        self._balances = bals
+        for x in balances:
+            if x in self._balances:
+                diff = self._balances[x] - balances[x]
+                if(diff<0): 
+                    self._balances.pop(x)
+                    self._weights.pop(x)
+                else:
+                    self._balances[x]=diff
                  
     def set_swap_fee(self, amount: Decimal):
         if(isinstance(amount,int) or isinstance(amount,float)):
@@ -64,8 +70,10 @@ class WeightedPool(WeightedMath):
         self._swap_fee = amount
     
     def set_weights(self, weights: dict):
-        if(not weigths.keys() in self._weights): raise Exception('WEIGHT TICKER NOT FOUND, JOIN POOL FIRST')
         for key in weights:
+            if(key not in self._weights): raise Exception('WEIGHT TICKER NOT FOUND, JOIN POOL FIRST')
+        for key in weights:
+            amount = weights[key]
             if(isinstance(amount,int) or isinstance(amount,float)):
                 amount = Decimal(amount)
             elif(not isinstance(amount, Decimal)):
