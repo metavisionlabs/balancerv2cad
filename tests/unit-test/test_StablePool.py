@@ -1,7 +1,7 @@
 from decimal import Decimal
-from src.BalancerV2cad.StablePool import StablePool
+from BalancerV2cad.StablePool import StablePool
 import unittest
-from src.BalancerV2cad.BalancerConstants import *
+from BalancerV2cad.BalancerConstants import *
 
 class TestStablePool(unittest.TestCase):
 
